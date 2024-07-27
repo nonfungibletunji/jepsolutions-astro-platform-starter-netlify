@@ -2,12 +2,14 @@
 import { getCollection } from 'astro:content';
 
 import Layout from '../layouts/Layout.astro';
+import Card from '../components/Card.astro';
 import Hero from '../components/Hero.astro';
 
 import ContextAlert from '../components/ContextAlert.astro';
 import Markdown from '../components/Markdown.astro';
 
 const allProjects = await getCollection('projects');
+console.log('whats in projects = ', allProjects);
 const projects = allProjects.sort((a, b) => {
     return b.data.date - a.data.date;
 });
@@ -109,6 +111,7 @@ Any page or data can be rebuilt only when needed, without site visitors ever get
     <div class="relative">
         <div class="mx-auto px-8 md:max-w-7xl">
             <Hero />
+            <h1>I am here</h1>
             <div class="relative w-full mt-5 mb-10">
                 <div class="clear-both relative">
                     <div class="grid flex-wrap items-start grid-cols-1 gap-4 lg:grid-cols-3 md:grid-cols-2 portfolio gap-8">
