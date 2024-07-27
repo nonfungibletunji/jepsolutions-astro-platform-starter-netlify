@@ -1,21 +1,123 @@
 ---
+import { getCollection } from 'astro:content';
+
 import Layout from '../layouts/Layout.astro';
 import ContextAlert from '../components/ContextAlert.astro';
 import Markdown from '../components/Markdown.astro';
 
+const allProjects = await getCollection('projects');
+const projects = allProjects.sort((a, b) => {
+    return b.data.date - a.data.date;
+});
 const explainer = `
 An Astro website can go way beyond static pages - on the right platform.
 
-Netlify supports not only [Streaming SSR](https://docs.astro.build/en/guides/server-side-rendering/#html-streaming) and fast [Edge Middleware](https://docs.astro.build/en/guides/middleware/), but also [on-demand revalidation](https://www.netlify.com/blog/cache-tags-and-purge-api-on-netlify/) and [stale-while-revalidate](https://www.netlify.com/blog/swr-and-fine-grained-cache-control/). 
+Netlify supports not only [Streaming SSR](https://docs.astro.build/en/guides/server-side-rendering/#html-streaming) and fast [Edge Middleware](https://docs.astro.build/en/guides/middleware/), but also [on-demand revalidation](https://www.netlify.com/blog/cache-tags-and-purge-api-on-netlify/) and [stale-while-revalidate](https://www.netlify.com/blog/swr-and-fine-grained-cache-control/).
 Any page or data can be rebuilt only when needed, without site visitors ever getting a performance hit.
 `;
 ---
 
 <Layout title="Welcome to Astro.">
-    <ContextAlert class="mb-4" />
-    <h1 class="mb-10">Netlify Platform Starter for Astro</h1>
-    <Markdown content={explainer} class="text-lg mb-10" />
-    <p class="mb-8">
-        <a href="https://docs.netlify.com/frameworks/astro/" class="btn btn-lg btn-primary sm:btn-wide">Read the Docs</a>
-    </p>
+    <script>
+        const masonry = () => {
+            const portfolio = document.querySelector('.portfolio');
+            let column = 3;
+
+            const responsive = [
+                {
+                    breakpoint: 1280,
+                    column: 3
+                },
+                {
+                    breakpoint: 1024,
+                    column: 2
+                },
+                {
+                    breakpoint: 768,
+                    column: 1
+                }
+            ];
+
+            const winWidth = window.innerWidth;
+
+            for (let i = 0; i < responsive.length; i++) {
+                if (winWidth <= responsive[i].breakpoint) {
+                    column = responsive[i].column;
+                }
+            }
+
+            if (column === 1) {
+                const listElms = Array.prototype.slice.call(portfolio.querySelectorAll('figure'), 0);
+                listElms.forEach((listElm) => {
+                    listElm.style.marginTop = '';
+                });
+
+                return false;
+            }
+
+            const listElms = Array.prototype.slice.call(portfolio.querySelectorAll('figure'), 0);
+
+            if (listElms.length === 0) {
+                return false;
+            }
+
+            listElms.forEach((listElm, index) => {
+                listElm.style.marginTop = '';
+
+                if (column > index) {
+                    return;
+                }
+
+                const topListElm = listElms[index - column];
+                const topListElmPosi = topListElm.getBoundingClientRect().top;
+                const topListHeight = getHeightAndMarginBottom(topListElm);
+                const topListBottomPosi = topListElmPosi + topListHeight;
+                const listElmPosi = listElm.getBoundingClientRect().top;
+                let setPosi = listElmPosi.toFixed(0) - topListBottomPosi.toFixed(0) - 16;
+
+                if (setPosi === 0) {
+                    return false;
+                }
+
+                setPosi = '-' + setPosi + 'px';
+                listElm.style.marginTop = setPosi;
+            });
+        };
+
+        const getHeightAndMarginBottom = (elm) => {
+            const height = elm.getBoundingClientRect().height;
+            const styles = getComputedStyle(elm);
+            const bottom = parseFloat(styles.marginBottom);
+            return height + bottom;
+        };
+
+        masonry();
+
+        window.addEventListener('resize', () => {
+            masonry();
+        });
+        document.addEventListener('DOMContentLoaded', () => {
+            masonry();
+        });
+        document.addEventListener('astro:page-load', () => {
+            masonry();
+        });
+    </script>
+
+    <div class="relative">
+        <div class="mx-auto px-8 md:max-w-7xl">
+            <Hero />
+            <div class="relative w-full mt-5 mb-10">
+                <div class="clear-both relative">
+                    <div class="grid flex-wrap items-start grid-cols-1 gap-4 lg:grid-cols-3 md:grid-cols-2 portfolio gap-8">
+                        {
+                            projects.map((project, index) => (
+                                <Card index={index + 1} slug={project.slug} title={project.data.title} image={project.data.image} tags={project.data.tag} />
+                            ))
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </Layout>
